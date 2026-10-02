@@ -272,7 +272,9 @@ rule-providers:
 # 自己的规则
   own-Direct: { <<: *c1, path: ./RuleSet/own-Direct.yaml, url: https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/own-direct.yaml }
   own-Proxy:  { <<: *c1, path: ./RuleSet/own-Proxy.yaml, url: https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/own-proxy.yaml }
-
+# Emby规则  
+  Emby-Proxy: { <<: *c1, path: ./RuleSet/Emby-Proxy.yaml, url: 'https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/emby-proxy.yaml' }
+  Emby-Direct: { <<: *c1, path: ./RuleSet/Emby-Direct.yaml, url: 'https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/emby-direct.yaml' }
 # Ban
 #  rule_reject: { <<: *c2, path: ./RuleSet/rule_reject.yaml, url: https://ruleset.skk.moe/Clash/non_ip/reject.txt }
 #  ruleset_reject: { <<: *d2, path: ./RuleSet/ruleset_reject.yaml, url: https://ruleset.skk.moe/Clash/domainset/reject.txt }
@@ -331,9 +333,9 @@ rule-providers:
 
 # ==================== 规则路由 ====================
 rules:
-# PDT / Emby：根域名走 EmbyProxy，子域名直连
-- DOMAIN,pdtvs.com,EmbyProxy
-- DOMAIN-SUFFIX,pdtvs.com,DIRECT
+# Emby
+- RULE-SET,Emby-Proxy,EmbyProxy
+- RULE-SET,Emby-Direct,DIRECT
 
 #自用
 - RULE-SET,own-Direct,DIRECT
