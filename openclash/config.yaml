@@ -1,4 +1,4 @@
-# Date: 2026-10-01
+# Date: 2026-10-02
 # Meta文档：https://github.com/MetaCubeX/mihomo/blob/Meta/docs/config.yaml
 # 参考1：https://github.com/Repcz/Tool/blob/X/mihomo/Client/config.yaml
 # 参考2: https://github.com/Tartarus2014/For-own-use/blob/master/MY/Clash.tpl
@@ -12,7 +12,8 @@ proxies:
 
 # ==================== 代理提供者 ====================
 # 真实订阅由 OpenClash 本地覆写模块注入，Public GitHub 不保存订阅 URL / Token
-proxy-providers: {}
+proxy-providers:
+
 
 # ==================== 核心配置 ====================
 # 混合端口 HTTP和SOCKS5用一个端口
@@ -63,7 +64,6 @@ external-ui-url: https://github.com/Zephyruso/zashboard/releases/latest/download
 external-ui-name: zashboard
 external-ui: ui
 external-controller: 127.0.0.1:9090
-# secret: yyds666
 
 
 # 使用geoip.dat数据库
@@ -161,37 +161,36 @@ dns:
     - 223.5.5.5
     - 119.29.29.29
 
-  # DIRECT 流量优先使用国内公共 DoH
+  # DIRECT 流量使用国内公共 DoH
   direct-nameserver:
     - https://dns.alidns.com/dns-query#DIRECT
     - https://doh.pub/dns-query#DIRECT
 
-  # 专门解析代理节点服务器域名，避免代理 DNS 的“鸡生蛋”问题
+  # 代理节点服务器域名解析必须可在节点尚未加载时直接工作
   proxy-server-nameserver:
     - https://dns.alidns.com/dns-query#DIRECT
     - https://doh.pub/dns-query#DIRECT
 
-  # 根据域名分流 DNS
+  # 根据域名分流 DNS。这里全部走 DIRECT，避免启动阶段依赖 sProxy
   nameserver-policy:
-    # 中国大陆域名
     "geosite:cn":
       - https://dns.alidns.com/dns-query#DIRECT
       - https://doh.pub/dns-query#DIRECT
-    # 非中国大陆地理域名，经 sProxy 查询海外公共 DNS
     "geosite:geolocation-!cn":
-      - https://1.1.1.1/dns-query#sProxy
-      - https://dns.google/dns-query#sProxy
+      - https://dns.alidns.com/dns-query#DIRECT
+      - https://doh.pub/dns-query#DIRECT
 
-  # 默认兜底：海外公共 DNS 经 sProxy 查询
+  # 默认兜底同样不依赖任何代理组，保证 proxy-provider 能先正常加载
   nameserver:
-    - https://1.1.1.1/dns-query#sProxy
-    - https://dns.google/dns-query#sProxy
+    - https://dns.alidns.com/dns-query#DIRECT
+    - https://doh.pub/dns-query#DIRECT
 
 
 # 策略组类型模板 - 定义不同的策略组基础配置
 use: &use1 { type: select, include-all: true, exclude-type: direct } #手动选择——展开所有节点
-auto: &auto1 { type: url-test, lazy: true, url: "http://www.gstatic.com/generate_204", interval: 600, tolerance: 30, include-all: true, exclude-type: direct } #自动测速——展开所有节点
+auto: &auto1 { type: url-test, lazy: true, url: "http://www.gstatic.com/generate_204", interval: 600, tolerance: 30, include-all: true, exclude-type: direct, hidden: true } #自动测速——展开所有节点
 fallback: &fall1 { type: fallback, interval: 600, lazy: true, url: 'http://www.gstatic.com/generate_204' }
+emby-backup: &embybackup { type: fallback, interval: 300, timeout: 5000, lazy: true, url: 'http://www.gstatic.com/generate_204', include-all: true, exclude-type: direct, hidden: true } # Emby备用池：5分钟健康检查，仅首选路径不可用时接管
 smart: &smart1 { type: smart, interval: 600, lazy: true, url: 'http://www.gstatic.com/generate_204', hidden: true, uselightgbm: true }
 
 # 节点筛选正则表达式 - 基于地理位置和关键词过滤
@@ -238,7 +237,9 @@ proxy-groups:
 - { name: Adobe, icon: "https://rawstatic.com/shangrenxi/Rules/master/img/adobe.png", <<: *g2 }
 - { name: Figma, icon: "https://rawstatic.com/shangrenxi/Rules/master/img/figma.png", <<: *g2 }
 - { name: Paypal, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/PayPal.png", <<: *g4 }
-- { name: EmbyProxy, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Media.png", <<: *a0 }
+- { name: EmbyProxy, type: fallback, proxies: [ Emby-Preferred,Emby-Backup ], url: "http://www.gstatic.com/generate_204", interval: 300, timeout: 5000, lazy: true, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Media.png" }
+- { name: Emby-Preferred, type: select, include-all: true, exclude-type: direct, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Proxy.png" }
+- { name: Emby-Backup, <<: *embybackup, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Auto.png" }
 #手动选择
 - { name: 🇭🇰HK, proxies: [ 🇭🇰HK-Auto ], icon: "https://rawstatic.com/erdongchanyo/icon/main/Policy-Country/HK02.png", <<: *use1, filter: *FilterHK }
 - { name: 🇨🇳TW, proxies: [ 🇨🇳TW-Auto ], icon: "https://rawstatic.com/erdongchanyo/icon/main/Policy-Country/TW.png", <<: *use1, filter: *FilterTW }
@@ -248,12 +249,12 @@ proxy-groups:
 - { name: 🇺🇸US, proxies: [ 🇺🇸US-Auto ], icon: "https://rawstatic.com/erdongchanyo/icon/main/Policy-Country/US.png", <<: *use1, filter: *FilterUS }
 # - { name: 🌏Others, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Global.png", <<: *use1, filter: *FilterOT }
 #自动测速
-- { name: 🇭🇰HK-Auto, tolerance: 20, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/HK.png", <<: *auto1, filter: *FilterHKLOW }
-- { name: 🇨🇳TW-Auto, tolerance: 30, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/TW.png", <<: *auto1, filter: *FilterTWLOW }
-- { name: 🇯🇵JP-Auto, tolerance: 30, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/JP.png", <<: *auto1, filter: *FilterJPLOW }
-- { name: 🇸🇬SG-Auto, tolerance: 30, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/SG.png", <<: *auto1, filter: *FilterSGLOW }
+- { name: 🇭🇰HK-Auto, tolerance: 20, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/HK.png", <<: *auto1, filter: *FilterHK }
+- { name: 🇨🇳TW-Auto, tolerance: 30, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/TW.png", <<: *auto1, filter: *FilterTW }
+- { name: 🇯🇵JP-Auto, tolerance: 30, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/JP.png", <<: *auto1, filter: *FilterJP }
+- { name: 🇸🇬SG-Auto, tolerance: 30, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/SG.png", <<: *auto1, filter: *FilterSG }
 # - { name:  tolerance: 30, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/KR.png", <<: *auto1, filter: *FilterKRLOW }
-- { name: 🇺🇸US-Auto, tolerance: 50, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/US.png", <<: *auto1, filter: *FilterUSLOW }
+- { name: 🇺🇸US-Auto, tolerance: 50, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/US.png", <<: *auto1, filter: *FilterUS }
 
 # ==================== 规则集 ====================
 c1: &c1 { type: http, behavior: classical, format: yaml, interval: 604800 } #classical分流
