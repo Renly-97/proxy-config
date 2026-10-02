@@ -275,8 +275,8 @@ rule-providers:
 # Emby规则
   Emby-Private-Proxy: { <<: *c1, interval: 1800, path: ./RuleSet/Emby-Private-Proxy.yaml, url: 'https://api.github.com/repos/Renly-97/proxy-private/contents/emby-proxy.yaml?ref=main' }
   Emby-Private-Direct: { <<: *c1, interval: 1800, path: ./RuleSet/Emby-Private-Direct.yaml, url: 'https://api.github.com/repos/Renly-97/proxy-private/contents/emby-direct.yaml?ref=main' }
-  Emby-Proxy: { <<: *c1, path: ./RuleSet/Emby-Proxy.yaml, url: 'https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/emby-proxy.yaml' }
-  Emby-Direct: { <<: *c1, path: ./RuleSet/Emby-Direct.yaml, url: 'https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/emby-direct.yaml' }
+ # Emby-Proxy: { <<: *c1, path: ./RuleSet/Emby-Proxy.yaml, url: 'https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/emby-proxy.yaml' }
+ # Emby-Direct: { <<: *c1, path: ./RuleSet/Emby-Direct.yaml, url: 'https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/emby-direct.yaml' }
 # Ban
 #  rule_reject: { <<: *c2, path: ./RuleSet/rule_reject.yaml, url: https://ruleset.skk.moe/Clash/non_ip/reject.txt }
 #  ruleset_reject: { <<: *d2, path: ./RuleSet/ruleset_reject.yaml, url: https://ruleset.skk.moe/Clash/domainset/reject.txt }
