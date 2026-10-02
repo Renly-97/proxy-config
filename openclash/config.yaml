@@ -21,7 +21,7 @@ proxy-providers: {}
 mixed-port: 7890
 # tproxy-port: 7895
 
-allow-lan: false
+allow-lan: true
 #  find-process-mode has 3 values:always, strict, off
 #  - always, 开启，强制匹配所有进程
 #  - strict, 默认，由 mihomo 判断是否开启
