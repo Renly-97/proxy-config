@@ -1,4 +1,2 @@
 payload:
-  - DOMAIN-SUFFIX,pdtvs.com
   - DOMAIN-SUFFIX,cdn1.example.com
-  - DOMAIN-SUFFIX,cdn2.example.com
