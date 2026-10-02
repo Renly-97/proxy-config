@@ -273,8 +273,8 @@ rule-providers:
   own-Direct: { <<: *c1, path: ./RuleSet/own-Direct.yaml, url: https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/own-direct.yaml }
   own-Proxy:  { <<: *c1, path: ./RuleSet/own-Proxy.yaml, url: https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/own-proxy.yaml }
 # Emby规则
-  Emby-Private-Proxy: { type: http, behavior: classical, format: yaml, interval: 1800, path: ./RuleSet/Emby-Private-Proxy.yaml, url: 'https://api.github.com/repos/Renly-97/proxy-private/contents/emby-proxy.yaml?ref=main' }
-  Emby-Private-Direct: { type: http, behavior: classical, format: yaml, interval: 1800, path: ./RuleSet/Emby-Private-Direct.yaml, url: 'https://api.github.com/repos/Renly-97/proxy-private/contents/emby-direct.yaml?ref=main' }
+  Emby-Private-Proxy: { <<: *c1, interval: 1800, path: ./RuleSet/Emby-Private-Proxy.yaml, url: 'https://api.github.com/repos/Renly-97/proxy-private/contents/emby-proxy.yaml?ref=main' }
+  Emby-Private-Direct: { <<: *c1, interval: 1800, path: ./RuleSet/Emby-Private-Direct.yaml, url: 'https://api.github.com/repos/Renly-97/proxy-private/contents/emby-direct.yaml?ref=main' }
   Emby-Proxy: { <<: *c1, path: ./RuleSet/Emby-Proxy.yaml, url: 'https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/emby-proxy.yaml' }
   Emby-Direct: { <<: *c1, path: ./RuleSet/Emby-Direct.yaml, url: 'https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/emby-direct.yaml' }
 # Ban
@@ -338,8 +338,8 @@ rules:
 # Emby
 - RULE-SET,Emby-Private-Proxy,EmbyProxy
 - RULE-SET,Emby-Private-Direct,DIRECT
-- RULE-SET,Emby-Proxy,EmbyProxy
-- RULE-SET,Emby-Direct,DIRECT
+#- RULE-SET,Emby-Proxy,EmbyProxy
+#- RULE-SET,Emby-Direct,DIRECT
 
 #自用
 - RULE-SET,own-Direct,DIRECT
