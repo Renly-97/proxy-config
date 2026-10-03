@@ -26,7 +26,7 @@ allow-lan: true
 #  - always, 开启，强制匹配所有进程
 #  - strict, 默认，由 mihomo 判断是否开启
 #  - off, 不匹配进程，推荐在路由器上使用此模式
-find-process-mode: strict
+find-process-mode: off
 # 全局 TLS 指纹
 # global-client-fingerprint: chrome
 # enable-process: true
@@ -55,7 +55,7 @@ keep-alive-idle: 600
 
 # 实验性功能
 experimental:
-  quic-go-disable-gso: true
+  quic-go-disable-gso: false
 
 # 管理面板配置
 external-ui-url: https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip
@@ -130,7 +130,7 @@ dns:
   # 启用IPv6解析
   ipv6: false
   # 自适应替换缓存算法
-  cache-algorithm: chrome
+  cache-algorithm: arc
   # 模式：redir-host或fake-ip
   enhanced-mode: fake-ip
   # fake-ip 池设置
