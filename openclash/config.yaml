@@ -236,8 +236,8 @@ proxy-groups:
 - { name: Figma, icon: "https://rawstatic.com/shangrenxi/Rules/master/img/figma.png", <<: *g2 }
 - { name: Paypal, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/PayPal.png", <<: *g4 }
 - { name: EmbyProxy, type: fallback, proxies: [ Emby-Preferred,Emby-Backup ], url: "http://www.gstatic.com/generate_204", interval: 300, timeout: 5000, lazy: true, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Media.png" }
-- { name: Emby-Preferred, type: select, include-all: true, exclude-type: direct, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Proxy.png" }
-- { name: Emby-Backup, <<: *embybackup, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Auto.png" }
+- { name: Emby-Preferred, type: select, proxies: [ 🇭🇰HK-Auto,🇨🇳TW-Auto,🇸🇬SG-Auto,🇺🇸US-Auto,🇯🇵JP-Auto,🇭🇰HK,🇨🇳TW,🇸🇬SG,🇺🇸US,🇯🇵JP ], icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Proxy.png" }
+- { name: Emby-Backup, <<: *embybackup, filter: '(🇭🇰|港|HK|(?i)Hong|台|TW|(?i)Taiwan|🇸🇬|新加坡|狮|獅|SG|(?i)Singapore|🇺🇸|美|US|(?i)States|American)', icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Auto.png" }
 #手动选择
 - { name: 🇭🇰HK, proxies: [ 🇭🇰HK-Auto ], icon: "https://rawstatic.com/erdongchanyo/icon/main/Policy-Country/HK02.png", <<: *use1, filter: *FilterHK }
 - { name: 🇨🇳TW, proxies: [ 🇨🇳TW-Auto ], icon: "https://rawstatic.com/erdongchanyo/icon/main/Policy-Country/TW.png", <<: *use1, filter: *FilterTW }
