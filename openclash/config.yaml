@@ -26,7 +26,7 @@ allow-lan: true
 #  - always, 开启，强制匹配所有进程
 #  - strict, 默认，由 mihomo 判断是否开启
 #  - off, 不匹配进程，推荐在路由器上使用此模式
-find-process-mode: off
+find-process-mode: strict
 # 全局 TLS 指纹
 # global-client-fingerprint: chrome
 # enable-process: true
