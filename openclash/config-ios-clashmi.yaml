@@ -1,0 +1,664 @@
+# Clash Mi / iOS 优化试用版 — 2026-10-04
+# 基于你本次上传的 config(3).yaml；适用于 Clash Mi，未按 Stash 的语法制作。
+#
+# 导入前必须补充：
+# 1. 源文件没有节点；下方 proxy-providers 仍为空。导入手机的私人订阅覆写，
+#    或按下方注释示例填写自己的 Clash / Mihomo 节点订阅。
+# 2. 两个 Emby-Private-* 使用 GitHub 私库 API。已补 Accept 原始文件请求头，
+#    还需在 x-emby-private-headers 中填写自己的只读 Token，或由私人覆写注入。
+# 3. 此文件不含 F1/F3 合并模块；原通用配置本身也没有该模块。
+#    OpenClash 的 shell 覆写及 Verge 的 JS 扩展不能直接作为 Clash Mi 配置使用。
+#
+# Clash Mi 导入建议：此配置选择“内置-不覆写”（若版本使用其他文案，选择保留
+# 订阅自身 DNS/嗅探设置）；TUN 使用 App 的 iOS 默认设置。内置面板/secret 由 App 管理。
+# 首次下载订阅/规则若无法直连，可先连接现有 QX 下载，再切换到 Clash Mi 测试。
+#
+# 主要变化：
+# - 移除外部面板下载、Geo 数据库地址、Linux 自动路由及未引用的模板/图标。
+# - DNS 保留原来的国内直连 DoH；删除效果相同的 GeoSite DNS 分支，避免额外加载。
+# - 不再对全部中国域名强制返回真实 IP；保留局域网/时间同步，并补 APNs、登录门户等例外。
+# - 通用代理表的域名/IP 改用原作者的 MRS，已核对生成时内容与旧表对应部分一致。
+# - 177 条原关键词/正则保留在 rule_proxy-extra，属于 2026-10-04 的兼容快照；
+#   MRS 主表会自动更新，这 177 条不会单独自动更新。
+# - Geo_AS_CN 改为原作者的纯 CIDR 格式，保留其全部 IPv4/IPv6 网段及免解析行为。
+# - AI 改为 QuixoticHeart 持续更新的无 ASN AI 表，覆盖主要海外 AI；
+#   与原 AI 大表覆盖范围不同，原来被泛化纳入 AI 的非 AI 服务恢复后续常规分流。
+# - 保留 29 个原策略组、地区手选/自动、Emby 首选/备用、原 Final 默认直连。
+# - 地区自动测速改为 20 分钟且按需执行；Emby 备用检测仍为 5 分钟。
+# - 补充 Apple 推送与 Wi-Fi 登录检测直连；健康检测只接受 HTTP 204。
+#
+# 已通过 Mihomo v1.19.32 语法检查和公开规则加载测试，地区分组使用占位节点验证；
+# 私有规则、真实节点未验证，iOS 的真实内存、切网及推送需在你的手机上测试。
+
+# ---------- iOS 基础设置 ----------
+mode: rule
+log-level: warning
+mixed-port: 7890
+allow-lan: false
+bind-address: 127.0.0.1
+find-process-mode: 'off'
+ipv6: true
+unified-delay: true
+tcp-concurrent: true
+keep-alive-interval: 30
+keep-alive-idle: 600
+profile:
+  store-selected: true
+  store-fake-ip: true
+tun:
+  enable: true
+  stack: gvisor
+  mtu: 1280
+  dns-hijack:
+  - any:53
+  - tcp://any:53
+sniffer:
+  enable: true
+  force-dns-mapping: false
+  parse-pure-ip: true
+  override-destination: false
+  sniff:
+    HTTP:
+      ports:
+      - 80
+      - 8080-8880
+      override-destination: false
+    TLS:
+      ports:
+      - 443
+      - 8443
+    QUIC:
+      ports:
+      - 443
+      - 8443
+  skip-domain:
+  - Mijia Cloud
+  - +.push.apple.com
+
+# ---------- DNS：不依赖代理组引导启动 ----------
+dns:
+  enable: true
+  prefer-h3: false
+  ipv6: false
+  cache-algorithm: arc
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+  - '*.lan'
+  - '*.local'
+  - '*.localhost'
+  - time.*.com
+  - ntp.*.com
+  - pool.ntp.org
+  - '*.pool.ntp.org'
+  - time.windows.com
+  - time.apple.com
+  - time.google.com
+  - mtalk.google.com
+  - alt[1-8]-mtalk.google.com
+  - +.push.apple.com
+  - captive.apple.com
+  - localhost.ptlogin2.qq.com
+  - '*.mcdn.bilivideo.cn'
+  - +.bilibili.com
+  - +.bilicdn.com
+  - +.bilivideo.com
+  - +.stun.*.*
+  - +.stun.*.*.*
+  default-nameserver:
+  - 223.5.5.5
+  - 119.29.29.29
+  direct-nameserver:
+  - https://dns.alidns.com/dns-query#DIRECT
+  - https://doh.pub/dns-query#DIRECT
+  proxy-server-nameserver:
+  - https://dns.alidns.com/dns-query#DIRECT
+  - https://doh.pub/dns-query#DIRECT
+  nameserver:
+  - https://dns.alidns.com/dns-query#DIRECT
+  - https://doh.pub/dns-query#DIRECT
+
+# ---------- 节点：需要你自己的订阅或私人覆写 ----------
+# 请直接编辑下面的 proxy-providers 字典；不要再追加第二个同名顶层键。
+# 示例（去掉注释后，替换为自己的订阅；多个订阅使用不同名称和 path）：
+# proxy-providers:
+#   F1:
+#     type: http
+#     url: "填写你的 ClashMeta 订阅地址"
+#     path: ./ProxyProvider/F1.yaml
+#     interval: 259200
+#     proxy: DIRECT
+#     override:
+#       additional-prefix: "[F1] "
+#     health-check:
+#       enable: true
+#       url: http://www.gstatic.com/generate_204
+#       interval: 1800
+#       lazy: true
+#       expected-status: 204
+proxies: []
+proxy-providers: {}
+
+# ---------- 原有策略组 ----------
+proxy-groups:
+  - {name: sProxy, type: select, proxies: [🇭🇰HK, 🇨🇳TW, 🇯🇵JP, 🇸🇬SG, 🇺🇸US, 🇭🇰HK-Auto, 🇨🇳TW-Auto, 🇯🇵JP-Auto, 🇸🇬SG-Auto, 🇺🇸US-Auto, DIRECT]}
+  - {name: Final, type: select, proxies: [DIRECT, sProxy]}
+  - {name: Netflix, type: select, proxies: [sProxy, 🇭🇰HK, 🇨🇳TW, 🇯🇵JP, 🇸🇬SG, 🇺🇸US, 🇭🇰HK-Auto, 🇨🇳TW-Auto, 🇯🇵JP-Auto, 🇸🇬SG-Auto, 🇺🇸US-Auto]}
+  - {name: Disney, type: select, proxies: [sProxy, 🇭🇰HK, 🇨🇳TW, 🇯🇵JP, 🇸🇬SG, 🇺🇸US, 🇭🇰HK-Auto, 🇨🇳TW-Auto, 🇯🇵JP-Auto, 🇸🇬SG-Auto, 🇺🇸US-Auto]}
+  - {name: Youtube, type: select, proxies: [sProxy, 🇭🇰HK, 🇨🇳TW, 🇯🇵JP, 🇸🇬SG, 🇺🇸US, 🇭🇰HK-Auto, 🇨🇳TW-Auto, 🇯🇵JP-Auto, 🇸🇬SG-Auto, 🇺🇸US-Auto]}
+  - {name: Spotify, type: select, proxies: [sProxy, DIRECT, 🇭🇰HK, 🇨🇳TW, 🇯🇵JP, 🇸🇬SG, 🇺🇸US, 🇭🇰HK-Auto, 🇨🇳TW-Auto, 🇯🇵JP-Auto, 🇸🇬SG-Auto, 🇺🇸US-Auto]}
+  - {name: Media, type: select, proxies: [sProxy, DIRECT]}
+  - {name: ✨AI, type: select, proxies: [🇺🇸US, 🇨🇳TW, 🇯🇵JP, 🇸🇬SG]}
+  - {name: Telegram, type: select, proxies: [sProxy, 🇭🇰HK, 🇨🇳TW, 🇯🇵JP, 🇸🇬SG, 🇺🇸US, 🇭🇰HK-Auto, 🇨🇳TW-Auto, 🇯🇵JP-Auto, 🇸🇬SG-Auto, 🇺🇸US-Auto]}
+  - {name: Twitter, type: select, proxies: [sProxy, 🇭🇰HK, 🇨🇳TW, 🇯🇵JP, 🇸🇬SG, 🇺🇸US, 🇭🇰HK-Auto, 🇨🇳TW-Auto, 🇯🇵JP-Auto, 🇸🇬SG-Auto, 🇺🇸US-Auto]}
+  - {name: Apple, type: select, proxies: [DIRECT, sProxy, 🇭🇰HK, 🇨🇳TW, 🇯🇵JP, 🇸🇬SG, 🇺🇸US, 🇭🇰HK-Auto, 🇨🇳TW-Auto, 🇯🇵JP-Auto, 🇸🇬SG-Auto, 🇺🇸US-Auto]}
+  - {name: Microsoft, type: select, proxies: [DIRECT, sProxy, 🇭🇰HK, 🇨🇳TW, 🇯🇵JP, 🇸🇬SG, 🇺🇸US, 🇭🇰HK-Auto, 🇨🇳TW-Auto, 🇯🇵JP-Auto, 🇸🇬SG-Auto, 🇺🇸US-Auto]}
+  - {name: Google, type: select, proxies: [sProxy, 🇭🇰HK, 🇨🇳TW, 🇯🇵JP, 🇸🇬SG, 🇺🇸US, 🇭🇰HK-Auto, 🇨🇳TW-Auto, 🇯🇵JP-Auto, 🇸🇬SG-Auto, 🇺🇸US-Auto]}
+  - {name: Adobe, type: select, proxies: [sProxy, DIRECT, 🇭🇰HK, 🇨🇳TW, 🇯🇵JP, 🇸🇬SG, 🇺🇸US, 🇭🇰HK-Auto, 🇨🇳TW-Auto, 🇯🇵JP-Auto, 🇸🇬SG-Auto, 🇺🇸US-Auto]}
+  - {name: Figma, type: select, proxies: [sProxy, DIRECT, 🇭🇰HK, 🇨🇳TW, 🇯🇵JP, 🇸🇬SG, 🇺🇸US, 🇭🇰HK-Auto, 🇨🇳TW-Auto, 🇯🇵JP-Auto, 🇸🇬SG-Auto, 🇺🇸US-Auto]}
+  - {name: Paypal, type: select, proxies: [🇭🇰HK, 🇨🇳TW, 🇯🇵JP, 🇸🇬SG, 🇺🇸US]}
+  - {name: EmbyProxy, type: fallback, proxies: [Emby-Preferred, Emby-Backup], url: 'http://www.gstatic.com/generate_204', interval: 300, timeout: 5000, lazy: true, expected-status: 204}
+  - {name: Emby-Preferred, type: select, proxies: [🇭🇰HK-Auto, 🇨🇳TW-Auto, 🇸🇬SG-Auto, 🇺🇸US-Auto, 🇯🇵JP-Auto, 🇭🇰HK, 🇨🇳TW, 🇸🇬SG, 🇺🇸US, 🇯🇵JP]}
+  - {name: Emby-Backup, type: fallback, interval: 300, timeout: 5000, lazy: true, url: 'http://www.gstatic.com/generate_204', include-all: true, exclude-type: direct, hidden: true, filter: '(🇭🇰|港|HK|(?i)Hong|台|TW|(?i)Taiwan|🇸🇬|新加坡|狮|獅|SG|(?i)Singapore|🇺🇸|美|US|(?i)States|American)', expected-status: 204}
+  - {name: 🇭🇰HK, type: select, include-all: true, exclude-type: direct, proxies: [🇭🇰HK-Auto], filter: '(🇭🇰|港|HK|(?i)Hong)'}
+  - {name: 🇨🇳TW, type: select, include-all: true, exclude-type: direct, proxies: [🇨🇳TW-Auto], filter: '(台|TW|(?i)Taiwan)'}
+  - {name: 🇯🇵JP, type: select, include-all: true, exclude-type: direct, proxies: [🇯🇵JP-Auto], filter: '(🇯🇵|日|JP|(?i)Japan)'}
+  - {name: 🇸🇬SG, type: select, include-all: true, exclude-type: direct, proxies: [🇸🇬SG-Auto], filter: '(🇸🇬|新加坡|狮|獅|SG|(?i)Singapore)'}
+  - {name: 🇺🇸US, type: select, include-all: true, exclude-type: direct, proxies: [🇺🇸US-Auto], filter: '(🇺🇸|美|US|(?i)States|American)'}
+  - {name: 🇭🇰HK-Auto, type: url-test, lazy: true, url: 'http://www.gstatic.com/generate_204', interval: 1200, tolerance: 20, include-all: true, exclude-type: direct, hidden: true, filter: '(🇭🇰|港|HK|(?i)Hong)', timeout: 5000, expected-status: 204}
+  - {name: 🇨🇳TW-Auto, type: url-test, lazy: true, url: 'http://www.gstatic.com/generate_204', interval: 1200, tolerance: 30, include-all: true, exclude-type: direct, hidden: true, filter: '(台|TW|(?i)Taiwan)', timeout: 5000, expected-status: 204}
+  - {name: 🇯🇵JP-Auto, type: url-test, lazy: true, url: 'http://www.gstatic.com/generate_204', interval: 1200, tolerance: 30, include-all: true, exclude-type: direct, hidden: true, filter: '(🇯🇵|日|JP|(?i)Japan)', timeout: 5000, expected-status: 204}
+  - {name: 🇸🇬SG-Auto, type: url-test, lazy: true, url: 'http://www.gstatic.com/generate_204', interval: 1200, tolerance: 30, include-all: true, exclude-type: direct, hidden: true, filter: '(🇸🇬|新加坡|狮|獅|SG|(?i)Singapore)', timeout: 5000, expected-status: 204}
+  - {name: 🇺🇸US-Auto, type: url-test, lazy: true, url: 'http://www.gstatic.com/generate_204', interval: 1200, tolerance: 50, include-all: true, exclude-type: direct, hidden: true, filter: '(🇺🇸|美|US|(?i)States|American)', timeout: 5000, expected-status: 204}
+
+# ---------- Emby 私库请求头：凭据只填在自己的私有副本/覆写中 ----------
+x-emby-private-headers: &emby-private-headers
+  Accept:
+    - application/vnd.github.raw+json
+  # Authorization:
+  #   - "Bearer 填写你的GitHub只读Token"
+
+# ---------- 规则集 ----------
+rule-providers:
+  own-Direct:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 604800
+    path: ./RuleSet/own-Direct.yaml
+    url: https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/own-direct.yaml
+  own-Proxy:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 604800
+    path: ./RuleSet/own-Proxy.yaml
+    url: https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/own-proxy.yaml
+  Emby-Private-Proxy:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 1800
+    path: ./RuleSet/Emby-Private-Proxy.yaml
+    url: https://api.github.com/repos/Renly-97/proxy-private/contents/emby-proxy.yaml?ref=main
+    header: *emby-private-headers
+  Emby-Private-Direct:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 1800
+    path: ./RuleSet/Emby-Private-Direct.yaml
+    url: https://api.github.com/repos/Renly-97/proxy-private/contents/emby-direct.yaml?ref=main
+    header: *emby-private-headers
+  ChinaMedia:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 604800
+    path: ./RuleSet/ChinaMedia.yaml
+    url: https://rawstatic.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMedia/ChinaMedia.yaml
+  Netflix:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 604800
+    path: ./RuleSet/Netflix.yaml
+    url: https://rawstatic.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix.yaml
+  Disney:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 604800
+    path: ./RuleSet/Disney.yaml
+    url: https://rawstatic.com/blackmatrix7/ios_rule_script/master/rule/Clash/Disney/Disney.yaml
+  Youtube:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 604800
+    path: ./RuleSet/Youtube.yaml
+    url: https://rawstatic.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml
+  Spotify:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 604800
+    path: ./RuleSet/Spotify.yaml
+    url: https://rawstatic.com/blackmatrix7/ios_rule_script/master/rule/Clash/Spotify/Spotify.yaml
+  rule_stream:
+    type: http
+    behavior: classical
+    format: text
+    interval: 604800
+    path: ./RuleSet/rule_stream.yaml
+    url: https://ruleset.skk.moe/Clash/non_ip/stream.txt
+  # AI 使用新的无 ASN 远程源；覆盖范围见文件头说明。
+  AI:
+    type: http
+    behavior: classical
+    format: text
+    interval: 604800
+    path: ./RuleSet/ios_AI.list
+    url: https://raw.githubusercontent.com/QuixoticHeart/rule-set/refs/heads/ruleset/meta/ai.list
+  rule_telegram:
+    type: http
+    behavior: classical
+    format: text
+    interval: 604800
+    path: ./RuleSet/rule_telegram.yaml
+    url: https://ruleset.skk.moe/Clash/non_ip/telegram.txt
+  Twitter:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 604800
+    path: ./RuleSet/Twitter.yaml
+    url: https://rawstatic.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml
+  rule_apple_cdn:
+    type: http
+    behavior: domain
+    format: text
+    interval: 604800
+    path: ./RuleSet/rule_apple_cdn.yaml
+    url: https://ruleset.skk.moe/Clash/domainset/apple_cdn.txt
+  rule_apple_services:
+    type: http
+    behavior: classical
+    format: text
+    interval: 604800
+    path: ./RuleSet/rule_apple_services.yaml
+    url: https://ruleset.skk.moe/Clash/non_ip/apple_services.txt
+  rule_apple_cn:
+    type: http
+    behavior: classical
+    format: text
+    interval: 604800
+    path: ./RuleSet/rule_apple_cn.yaml
+    url: https://ruleset.skk.moe/Clash/non_ip/apple_cn.txt
+  rule_microsoft_cdn:
+    type: http
+    behavior: classical
+    format: text
+    interval: 604800
+    path: ./RuleSet/rule_microsoft_cdn.yaml
+    url: https://ruleset.skk.moe/Clash/non_ip/microsoft_cdn.txt
+  rule_microsoft:
+    type: http
+    behavior: classical
+    format: text
+    interval: 604800
+    path: ./RuleSet/rule_microsoft.yaml
+    url: https://ruleset.skk.moe/Clash/non_ip/microsoft.txt
+  Google:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 604800
+    path: ./RuleSet/Google.yaml
+    url: https://rawstatic.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml
+  Adobe:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 604800
+    path: ./RuleSet/Adobe.yaml
+    url: https://rawstatic.com/blackmatrix7/ios_rule_script/master/rule/Clash/Adobe/Adobe.yaml
+  Figma:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 604800
+    path: ./RuleSet/Figma.yaml
+    url: https://rawstatic.com/shangrenxi/Rules/refs/heads/master/rules/Figma.yaml
+  Paypal:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 604800
+    path: ./RuleSet/Paypal.yaml
+    url: https://rawstatic.com/blackmatrix7/ios_rule_script/master/rule/Clash/PayPal/PayPal.yaml
+  SteamCN:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 604800
+    path: ./RuleSet/SteamCN.yaml
+    url: https://rawstatic.com/blackmatrix7/ios_rule_script/master/rule/Clash/SteamCN/SteamCN.yaml
+  rule_proxy:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://raw.githubusercontent.com/QuixoticHeart/rule-set/refs/heads/ruleset/meta/domain/proxy.mrs
+    path: ./RuleSet/ios_proxy_domain.mrs
+    interval: 604800
+  rule_domestic:
+    type: http
+    behavior: classical
+    format: text
+    interval: 604800
+    path: ./RuleSet/rule_domestic.yaml
+    url: https://ruleset.skk.moe/Clash/non_ip/domestic.txt
+  rule_direct:
+    type: http
+    behavior: classical
+    format: text
+    interval: 604800
+    path: ./RuleSet/rule_direct.yaml
+    url: https://ruleset.skk.moe/Clash/non_ip/direct.txt
+  rule_lan:
+    type: http
+    behavior: classical
+    format: text
+    interval: 604800
+    path: ./RuleSet/rule_lan.yaml
+    url: https://ruleset.skk.moe/Clash/non_ip/lan.txt
+  ip_stream:
+    type: http
+    behavior: classical
+    format: text
+    interval: 604800
+    path: ./RuleSet/ip_stream.yaml
+    url: https://ruleset.skk.moe/Clash/ip/stream.txt
+  ip_telegram:
+    type: http
+    behavior: classical
+    format: text
+    interval: 604800
+    path: ./RuleSet/ip_telegram.yaml
+    url: https://ruleset.skk.moe/Clash/ip/telegram.txt
+  ip_apple_services:
+    type: http
+    behavior: classical
+    format: text
+    interval: 604800
+    path: ./RuleSet/ip_apple_services.yaml
+    url: https://ruleset.skk.moe/Clash/ip/apple_services.txt
+  ip_lan:
+    type: http
+    behavior: classical
+    format: text
+    interval: 604800
+    path: ./RuleSet/ip_lan.yaml
+    url: https://ruleset.skk.moe/Clash/ip/lan.txt
+  ip_chinacompany:
+    type: http
+    behavior: ipcidr
+    format: yaml
+    interval: 604800
+    path: ./RuleSet/ip_chinacompany.yaml
+    url: https://rawstatic.com/ACL4SSR/ACL4SSR/refs/heads/master/Clash/Providers/ChinaCompanyIp.yaml
+  ip_china_ip:
+    type: http
+    behavior: ipcidr
+    format: text
+    interval: 604800
+    path: ./RuleSet/ip_china_ip.yaml
+    url: https://ruleset.skk.moe/Clash/ip/china_ip.txt
+  ip_china_ip_ipv6:
+    type: http
+    behavior: ipcidr
+    format: text
+    interval: 604800
+    path: ./RuleSet/ip_china_ip_ipv6.yaml
+    url: https://ruleset.skk.moe/Clash/ip/china_ip_ipv6.txt
+  Geo_AS_CN:
+    type: http
+    behavior: ipcidr
+    format: text
+    interval: 604800
+    path: ./RuleSet/ios_Geo_AS_CN.txt
+    url: https://raw.githubusercontent.com/DH-Teams/DH-Geo_AS_IP_CN/main/Geo_AS_IP_CN_All.txt
+  # 177 条关键词/正则兼容快照（2026-10-04），其余大表使用自动更新的 MRS。
+  rule_proxy-extra:
+    type: inline
+    behavior: classical
+    payload:
+    - DOMAIN-KEYWORD,1drv
+    - DOMAIN-KEYWORD,1e100
+    - DOMAIN-KEYWORD,abema
+    - DOMAIN-KEYWORD,amazon
+    - DOMAIN-KEYWORD,appledaily
+    - DOMAIN-KEYWORD,avoddashs
+    - DOMAIN-KEYWORD,avtb
+    - DOMAIN-KEYWORD,bbcfmt
+    - DOMAIN-KEYWORD,beetalk
+    - DOMAIN-KEYWORD,binance
+    - DOMAIN-KEYWORD,blogspot
+    - DOMAIN-KEYWORD,browserleaks
+    - DOMAIN-KEYWORD,discord
+    - DOMAIN-KEYWORD,dlercloud
+    - DOMAIN-KEYWORD,dropbox
+    - DOMAIN-KEYWORD,facebook
+    - DOMAIN-KEYWORD,fbcdn
+    - DOMAIN-KEYWORD,gmail
+    - DOMAIN-KEYWORD,google
+    - DOMAIN-KEYWORD,huobi
+    - DOMAIN-KEYWORD,instagram
+    - DOMAIN-KEYWORD,jav
+    - DOMAIN-KEYWORD,metamask
+    - DOMAIN-KEYWORD,musical.ly
+    - DOMAIN-KEYWORD,okx
+    - DOMAIN-KEYWORD,onedrive
+    - DOMAIN-KEYWORD,paypal
+    - DOMAIN-KEYWORD,pinterest
+    - DOMAIN-KEYWORD,porn
+    - DOMAIN-KEYWORD,sci-hub
+    - DOMAIN-KEYWORD,skydrive
+    - DOMAIN-KEYWORD,spotify
+    - DOMAIN-KEYWORD,telegram
+    - DOMAIN-KEYWORD,tiktok
+    - DOMAIN-KEYWORD,ttvnw
+    - DOMAIN-KEYWORD,twimg
+    - DOMAIN-KEYWORD,twitter
+    - DOMAIN-KEYWORD,uk-live
+    - DOMAIN-KEYWORD,voddazn
+    - DOMAIN-KEYWORD,whatsapp
+    - DOMAIN-KEYWORD,wikileaks
+    - DOMAIN-KEYWORD,youtube
+    - DOMAIN-REGEX,(^|\.)13mei[5-7]\.buzz$
+    - DOMAIN-REGEX,(^|\.)18j[efg]\.life$
+    - DOMAIN-REGEX,(^|\.)18jmttios[0-9]{2}\.com$
+    - DOMAIN-REGEX,(^|\.)18tv[1-5]\.com$
+    - DOMAIN-REGEX,(^|\.)2024(3[0-9]|4[0-9]|6[0-9]|7[0-9])\.xyz$
+    - DOMAIN-REGEX,(^|\.)3[0-9]{2}\.icu$
+    - DOMAIN-REGEX,(^|\.)69bag[0-1][1-9]?\.com$
+    - DOMAIN-REGEX,(^|\.)783([a-z][a-z]?)?\.tv$
+    - DOMAIN-REGEX,(^|\.)7mm0([0-1][0-9]?)?\.com$
+    - DOMAIN-REGEX,(^|\.)8dgo[1-57-9]\.com$
+    - DOMAIN-REGEX,(^|\.)91cg([1-9]|[0-9][1-9])?.com$
+    - DOMAIN-REGEX,(^|\.)91p[0-9][0-9]?\.com$
+    - DOMAIN-REGEX,(^|\.)91porn[0-9]?\.store$
+    - DOMAIN-REGEX,(^|\.)91porn[0-9]{3}\.me$
+    - DOMAIN-REGEX,(^|\.)91porn[fvxy]\.com$
+    - DOMAIN-REGEX,(^|\.)91porn\.(best|com|cool|fun|group|party|plus|site|tw|work)$
+    - DOMAIN-REGEX,(^|\.)91porna[1-7]?\.com$
+    - DOMAIN-REGEX,(^|\.)91sew1[1-6]\.buzz$
+    - DOMAIN-REGEX,(^|\.)91wang[1-9]\.com$
+    - DOMAIN-REGEX,(^|\.)989[a-z]?\.tv$
+    - DOMAIN-REGEX,(^|\.)99pp[1-9][0-9]\.com$
+    - DOMAIN-REGEX,(^|\.)9cha[0-9]{2}\.cc$
+    - DOMAIN-REGEX,(^|\.)[1-5]gaoap\.com$
+    - DOMAIN-REGEX,(^|\.)[1-9]+aipai\.(com|net)$
+    - DOMAIN-REGEX,(^|\.)[1-9]+zipai\.(com|net)$
+    - DOMAIN-REGEX,(^|\.)[1-9]00caocao\.com$
+    - DOMAIN-REGEX,(^|\.)[3-9]0000sao\.com$
+    - DOMAIN-REGEX,(^|\.)[a-z]?fulibl\.(cc|com|org|net|xyz)$
+    - DOMAIN-REGEX,(^|\.)[a-z][1-9][0-9][a-z]\.com$
+    - DOMAIN-REGEX,(^|\.)aipa(111|222|333|444|555|666|777|888|999)\.life$
+    - DOMAIN-REGEX,(^|\.)aisejushi(2|3|5|6)\.com$
+    - DOMAIN-REGEX,(^|\.)aiwei[1-9]{2}\.buzz$
+    - DOMAIN-REGEX,(^|\.)aqdk[0-9]{3}\.com$
+    - DOMAIN-REGEX,(^|\.)avcc1[0-9]\.com$
+    - DOMAIN-REGEX,(^|\.)avstar0[1-9]\.(com|me)$
+    - DOMAIN-REGEX,(^|\.)awjd[1-9]?\.tv$
+    - DOMAIN-REGEX,(^|\.)awwcn[1-9]?\.top$
+    - DOMAIN-REGEX,(^|\.)banyinjia[0-9]?\.com$
+    - DOMAIN-REGEX,(^|\.)bhzyk[1-9]?\.xyz$
+    - DOMAIN-REGEX,(^|\.)bibeidh1[6-8]\.cc$
+    - DOMAIN-REGEX,(^|\.)bilibili3(0[1-9]|1[0-2])\.xyz$
+    - DOMAIN-REGEX,(^|\.)bjini[0-9]{2}\.buzz$
+    - DOMAIN-REGEX,(^|\.)byy[0-9][0-9]?\.icu$
+    - DOMAIN-REGEX,(^|\.)byyum([3589]|2[235689]|3[34]|4[1-9]|5[1-79]|6[0134679])?\.com$
+    - DOMAIN-REGEX,(^|\.)cav1(0[2-9]|1[0-9])\.com$
+    - DOMAIN-REGEX,(^|\.)cgbb([1-9]|1[0-9]|20)\.com$
+    - DOMAIN-REGEX,(^|\.)chuzs[1-9]{0,2}\.buzz$
+    - DOMAIN-REGEX,(^|\.)cosaa[a-z]\.cyou$
+    - DOMAIN-REGEX,(^|\.)doufuru[0-9]?\.cc$
+    - DOMAIN-REGEX,(^|\.)doufuru[0-9]{2}?\.xyz$
+    - DOMAIN-REGEX,(^|\.)douyintt[0-9]\.me$
+    - DOMAIN-REGEX,(^|\.)fby[1-9]?[0-9]\.icu$
+    - DOMAIN-REGEX,(^|\.)fi11sm([0-9]+)?\.com$
+    - DOMAIN-REGEX,(^|\.)fiftymvapi\..+$
+    - DOMAIN-REGEX,(^|\.)flsq[0-9]{2}\.com$
+    - DOMAIN-REGEX,(^|\.)forduck[0-1][0-9]\.com$
+    - DOMAIN-REGEX,(^|\.)gaogediao\.(com|me|net|org)$
+    - DOMAIN-REGEX,(^|\.)gossipfuli[0-9]{3,4}\.xyz$
+    - DOMAIN-REGEX,(^|\.)guifw3[1-3]\.cc$
+    - DOMAIN-REGEX,(^|\.)h5ccav[1-5]\.com$
+    - DOMAIN-REGEX,(^|\.)hhmen[1-3]\.xyz$
+    - DOMAIN-REGEX,(^|\.)hkfg[1-7]\.xyz$
+    - DOMAIN-REGEX,(^|\.)hs[1-9]{2}\.vip$
+    - DOMAIN-REGEX,(^|\.)jav777\.(cc|tv|work)$
+    - DOMAIN-REGEX,(^|\.)jbk0([0-1][0-9]?)?\.com$
+    - DOMAIN-REGEX,(^|\.)jdyy[1-9]?\.me$
+    - DOMAIN-REGEX,(^|\.)jiuse[0-9]{1,3}\.com$
+    - DOMAIN-REGEX,(^|\.)jmtt\.(app|live|tv|vip)$
+    - DOMAIN-REGEX,(^|\.)jstv[0-9]{2}\.com$
+    - DOMAIN-REGEX,(^|\.)kdfl[0-9]{2}\.xyz$
+    - DOMAIN-REGEX,(^|\.)kimoav([1-9][0-9]?)?\.com$
+    - DOMAIN-REGEX,(^|\.)kpkuang\.(bond|fun|info|one|us)$
+    - DOMAIN-REGEX,(^|\.)ksyp0[1-9]\.com$
+    - DOMAIN-REGEX,(^|\.)lianren[1-7]\.cc$
+    - DOMAIN-REGEX,(^|\.)llyysp[0-9]{4}\.top$
+    - DOMAIN-REGEX,(^|\.)loibus(100|101|202|505|606)\.top$
+    - DOMAIN-REGEX,(^|\.)loibus\.(cc|com|link)$
+    - DOMAIN-REGEX,(^|\.)luchuxue([0-9]{0,5})\.buzz$
+    - DOMAIN-REGEX,(^|\.)maa18[0-2][0-9]\.com$
+    - DOMAIN-REGEX,(^|\.)madouqu[0-9]{2}\.cc$
+    - DOMAIN-REGEX,(^|\.)mdyy[0-1][0-9]\.com$
+    - DOMAIN-REGEX,(^|\.)mdyy[0-9][0-9]\.cc$
+    - DOMAIN-REGEX,(^|\.)mimi[0-9]{3}\.com$
+    - DOMAIN-REGEX,(^|\.)mimi\.(cfd|lol|onl|sbs|so|vc)$
+    - DOMAIN-REGEX,(^|\.)mitao[1-3]\.tv$
+    - DOMAIN-REGEX,(^|\.)mmtv[1-5]\.life$
+    - DOMAIN-REGEX,(^|\.)mmwz\.(fun|in|la|me|one|pro|pw|run|tv|ws)$
+    - DOMAIN-REGEX,(^|\.)momotk([1-9][0-9]?)?\.uno$
+    - DOMAIN-REGEX,(^|\.)nnbw[0-2]\.xyz$
+    - DOMAIN-REGEX,(^|\.)putaozy([1-9][0-9]?)?\.com$
+    - DOMAIN-REGEX,(^|\.)qqbs([0-9]{2})?\.vip$
+    - DOMAIN-REGEX,(^|\.)qqsp0[1-3]\.com$
+    - DOMAIN-REGEX,(^|\.)rbp[1-9][0-9]\.com$
+    - DOMAIN-REGEX,(^|\.)rbyh[1-9]\.buzz$
+    - DOMAIN-REGEX,(^|\.)rule34\.(asia|us|world|xxx|xyz)$
+    - DOMAIN-REGEX,(^|\.)sao[1-6]0000\.com$
+    - DOMAIN-REGEX,(^|\.)sbyjs2[6-9]\.buzz$
+    - DOMAIN-REGEX,(^|\.)sg11[3-9]\.me$
+    - DOMAIN-REGEX,(^|\.)shdd[0-9]{2}\.buzz$
+    - DOMAIN-REGEX,(^|\.)shuangmawei[0-9]{2}\.buzz$
+    - DOMAIN-REGEX,(^|\.)smgsp[0-2]?\.buzz$
+    - DOMAIN-REGEX,(^|\.)spankwire[1-9]\.com$
+    - DOMAIN-REGEX,(^|\.)ssphb[0-9]{2}\.xyz$
+    - DOMAIN-REGEX,(^|\.)supxxx[0-9]{0,2}\.com$
+    - DOMAIN-REGEX,(^|\.)sycf[0-9]?\.xyz$
+    - DOMAIN-REGEX,(^|\.)syjc1[1-6]\.xyz$
+    - DOMAIN-REGEX,(^|\.)tianbiav([1-9]|1[0-6])?\.com$
+    - DOMAIN-REGEX,(^|\.)tqav[1-9][0-9]\.com$
+    - DOMAIN-REGEX,(^|\.)tt[1-2][0-9]\.tv$
+    - DOMAIN-REGEX,(^|\.)ttghg[1-9][0-9]\.xyz$
+    - DOMAIN-REGEX,(^|\.)tttv([1-9][0-9]?|100)\.com$
+    - DOMAIN-REGEX,(^|\.)twav[1-9]\.xyz$
+    - DOMAIN-REGEX,(^|\.)twseb([1-9][0-9]?)?\.com$
+    - DOMAIN-REGEX,(^|\.)uu[a-z][1-9][0-9]?\.com$
+    - DOMAIN-REGEX,(^|\.)whtdh0[1-3]\.cc$
+    - DOMAIN-REGEX,(^|\.)wmm33[0-5]\.com$
+    - DOMAIN-REGEX,(^|\.)wyfuli[1-9]\.net$
+    - DOMAIN-REGEX,(^|\.)xg[0-9]{2}\.vip$
+    - DOMAIN-REGEX,(^|\.)xgyy([0-9]{2})?\.vip$
+    - DOMAIN-REGEX,(^|\.)xingdh([0-9]{3})?\.xyz$
+    - DOMAIN-REGEX,(^|\.)xlywz[1-9]?\.cc$
+    - DOMAIN-REGEX,(^|\.)xomfsp[1-9]?\.buzz$
+    - DOMAIN-REGEX,(^|\.)xv[0-9]{4}\.top$
+    - DOMAIN-REGEX,(^|\.)xxxyaom[0-9]{2}\.buzz$
+    - DOMAIN-REGEX,(^|\.)yiren[1-9][0-9]\.com$
+    - DOMAIN-REGEX,(^|\.)youyuapi\..+$
+    - DOMAIN-REGEX,(^|\.)yrrj[1-9]?\.buzz$
+    - DOMAIN-REGEX,(^|\.)yygc[0-9]?\.xyz$
+    - DOMAIN-REGEX,(^|\.)zayy([0-9]{0,3})?\.xyz$
+    - DOMAIN-REGEX,(^|\.)zh9[0-7]\.net$
+    - DOMAIN-REGEX,(^|\.)zy[0-9]{4}\.top$
+    - DOMAIN-REGEX,(^|\.)zztt[1-6][0-9]\.com$
+    - DOMAIN-REGEX,(^|\.)zzz[1-9][0-9]\.top$
+    - DOMAIN-REGEX,.+\.awsdns-[0-9][0-9]\.(co\.uk|com|net|org)$
+    - DOMAIN-REGEX,javdb\d+\.com$
+  rule_proxy-ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: https://raw.githubusercontent.com/QuixoticHeart/rule-set/refs/heads/ruleset/meta/ipcidr/proxy.mrs
+    path: ./RuleSet/ios_proxy_ip.mrs
+    interval: 604800
+
+# ---------- 规则优先级：系统例外 → 原有业务规则 → 原 Final ----------
+rules:
+- DOMAIN-SUFFIX,push.apple.com,DIRECT
+- DOMAIN,captive.apple.com,DIRECT
+- RULE-SET,Emby-Private-Proxy,EmbyProxy
+- RULE-SET,Emby-Private-Direct,DIRECT
+- RULE-SET,own-Direct,DIRECT
+- RULE-SET,own-Proxy,sProxy
+- RULE-SET,ChinaMedia,DIRECT
+- RULE-SET,Netflix,Netflix
+- RULE-SET,Disney,Disney
+- RULE-SET,Youtube,Youtube
+- RULE-SET,Spotify,Spotify
+- RULE-SET,rule_stream,Media
+- RULE-SET,AI,✨AI
+- RULE-SET,rule_telegram,Telegram
+- RULE-SET,Twitter,Twitter
+- RULE-SET,rule_apple_cdn,DIRECT
+- RULE-SET,rule_apple_services,Apple
+- RULE-SET,rule_apple_cn,DIRECT
+- RULE-SET,rule_microsoft_cdn,DIRECT
+- RULE-SET,rule_microsoft,Microsoft
+- RULE-SET,Google,Google
+- RULE-SET,Adobe,Adobe
+- RULE-SET,Figma,Figma
+- RULE-SET,Paypal,Paypal
+- RULE-SET,SteamCN,DIRECT
+- RULE-SET,rule_proxy,sProxy
+- RULE-SET,rule_proxy-extra,sProxy
+- RULE-SET,rule_proxy-ip,sProxy,no-resolve
+- RULE-SET,rule_domestic,DIRECT
+- RULE-SET,rule_direct,DIRECT
+- RULE-SET,rule_lan,DIRECT
+- RULE-SET,ip_stream,Media
+- RULE-SET,ip_telegram,Telegram
+- RULE-SET,ip_apple_services,Apple
+- RULE-SET,ip_lan,DIRECT
+- RULE-SET,ip_chinacompany,DIRECT
+- RULE-SET,ip_china_ip,DIRECT
+- RULE-SET,ip_china_ip_ipv6,DIRECT
+- RULE-SET,Geo_AS_CN,DIRECT,no-resolve
+- IP-CIDR,119.28.28.28/32,DIRECT
+- IP-CIDR,182.254.116.0/24,DIRECT
+- MATCH,Final
