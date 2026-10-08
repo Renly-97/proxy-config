@@ -350,9 +350,22 @@ rule-providers:
 
 # ==================== 规则路由 ====================
 rules:
-# 阿里国际站独立分流
+# 阿里国际站核心域名
 - DOMAIN-SUFFIX,alibaba.com,阿里国际站
 - DOMAIN-SUFFIX,alibabausercontent.com,阿里国际站
+
+# 遗漏CDN
+- DOMAIN,sc04.alicdn.com,阿里国际站
+- DOMAIN,assets.alicdn.com,阿里国际站
+- DOMAIN,s.alicdn.com,阿里国际站
+- DOMAIN,g.alicdn.com,阿里国际站
+- DOMAIN,gw.alicdn.com,阿里国际站
+- DOMAIN,img.alicdn.com,阿里国际站
+- DOMAIN,i.alicdn.com,阿里国际站
+- DOMAIN,aeis.alicdn.com,阿里国际站
+
+# AliApp 接口
+- DOMAIN-SUFFIX,ynuf.aliapp.org,阿里国际站
 # Emby
 - RULE-SET,Emby-Private-Proxy,EmbyProxy
 - RULE-SET,Emby-Private-Direct,DIRECT
