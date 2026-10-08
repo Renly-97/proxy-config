@@ -1,8 +1,1 @@
-payload:
-  # Microsoft / Windows 更新直连
-  - DOMAIN-SUFFIX,np.microsoft.com
-  - DOMAIN-SUFFIX,windowsupdate.com
-  - DOMAIN-SUFFIX,update.microsoft.com
-  - DOMAIN-SUFFIX,api.cdp.microsoft.com
-  - DOMAIN,adl.windows.com
-  - DOMAIN,emdl.ws.microsoft.com
+payload: []
