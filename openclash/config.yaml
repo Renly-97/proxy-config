@@ -342,6 +342,8 @@ rules:
 #- RULE-SET,Emby-Direct,DIRECT
 
 #自用
+- RULE-SET,Own-Private-Direct,DIRECT
+- RULE-SET,Own-Private-Proxy,sProxy
 - RULE-SET,own-Direct,DIRECT
 - RULE-SET,own-Proxy,sProxy
 #ban
