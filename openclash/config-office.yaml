@@ -1,10 +1,6 @@
 # ==================== 公司 Clash Verge 专用版 ====================
-# 基于原公共 config.yaml；仅内置两项公司侧差异：
-# 1) F1/F3 同编号节点合并为 url-test（HK/JP/SG/US 的 01/02）
-# 2) DNS 仅监听本机 127.0.0.1:1053
-# 家里 OpenClash 继续使用原 config.yaml + 远程覆写模块。
-
-# Date: 2026-10-01
+# 基于原公共 config.yaml
+# Date: 2026-10-08
 # Meta文档：https://github.com/MetaCubeX/mihomo/blob/Meta/docs/config.yaml
 # 参考1：https://github.com/Repcz/Tool/blob/X/mihomo/Client/config.yaml
 # 参考2: https://github.com/Tartarus2014/For-own-use/blob/master/MY/Clash.tpl
@@ -100,7 +96,7 @@ tun:
     - "udp://any:53"
   auto-detect-interface: true
   auto-route: true
-  auto-redirect: true
+  auto-redirect: false
 
 # 嗅探域名
 sniffer:
@@ -225,6 +221,7 @@ ai1: &ai1 { type: select, proxies: [ 🇺🇸US,🇨🇳TW,🇯🇵JP,🇸🇬SG
 # ==================== 代理策略组 ====================
 proxy-groups:
 - { name: sProxy, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Proxy.png", <<: *a0 }
+- { name: 阿里国际站, type: select, proxies: [ DIRECT,🇺🇸US,🇭🇰HK,🇸🇬SG,🇯🇵JP,🇨🇳TW ], icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Global.png" }
 - { name: Final, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Final.png", <<: *s1 }
 #多媒体
 - { name: Netflix, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Netflix.png", <<: *g1 }
@@ -353,6 +350,9 @@ rule-providers:
 
 # ==================== 规则路由 ====================
 rules:
+# 阿里国际站独立分流
+- DOMAIN-SUFFIX,alibaba.com,阿里国际站
+- DOMAIN-SUFFIX,alibabausercontent.com,阿里国际站
 # Emby
 - RULE-SET,Emby-Private-Proxy,EmbyProxy
 - RULE-SET,Emby-Private-Direct,DIRECT
