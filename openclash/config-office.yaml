@@ -359,6 +359,8 @@ rules:
 - DOMAIN,us-node-log-center.us-east-1.log.aliyuncs.com,阿里国际站
 
 # 遗漏CDN
+- DOMAIN,o.alicdn.com,阿里国际站
+- DOMAIN,is.alicdn.com,阿里国际站
 - DOMAIN,sc01.alicdn.com,阿里国际站
 - DOMAIN,u.alicdn.com,阿里国际站
 - DOMAIN,at.alicdn.com,阿里国际站
