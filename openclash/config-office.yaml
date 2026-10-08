@@ -354,7 +354,14 @@ rules:
 - DOMAIN-SUFFIX,alibaba.com,阿里国际站
 - DOMAIN-SUFFIX,alibabausercontent.com,阿里国际站
 
+# ===== 阿里国际站相关日志服务 =====
+- DOMAIN,hub-plan-log-1.log-global.aliyuncs.com,阿里国际站
+- DOMAIN,us-node-log-center.us-east-1.log.aliyuncs.com,阿里国际站
+
 # 遗漏CDN
+- DOMAIN,sc01.alicdn.com,阿里国际站
+- DOMAIN,u.alicdn.com,阿里国际站
+- DOMAIN,at.alicdn.com,阿里国际站
 - DOMAIN,sc04.alicdn.com,阿里国际站
 - DOMAIN,assets.alicdn.com,阿里国际站
 - DOMAIN,s.alicdn.com,阿里国际站
@@ -366,6 +373,7 @@ rules:
 
 # AliApp 接口
 - DOMAIN-SUFFIX,ynuf.aliapp.org,阿里国际站
+
 # Emby
 - RULE-SET,Emby-Private-Proxy,EmbyProxy
 - RULE-SET,Emby-Private-Direct,DIRECT
