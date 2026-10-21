@@ -1,1 +1,16 @@
+# ======================
+# Renly 个人分流规则
+# ======================
 
+# 强制代理
+host-suffix, re0.me, proxy
+host-suffix, madow.tv, proxy
+host, m.dian115.com, proxy
+host-suffix, lite.cn2gias.uk, proxy
+host, white.embymv.link, proxy
+
+# 强制直连
+host-suffix, pdtvs.com, direct
+
+# 指定美国节点策略
+host-suffix, example.com, 美国节点
