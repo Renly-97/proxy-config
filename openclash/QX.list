@@ -8,6 +8,7 @@ host-suffix, madow.tv, proxy
 host, m.dian115.com, proxy
 host-suffix, lite.cn2gias.uk, proxy
 host, white.embymv.link, proxy
+host, rsload.net, proxy
 
 # 强制直连
 host-suffix, pdtvs.com, direct
