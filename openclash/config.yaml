@@ -1,4 +1,4 @@
-# Date: 2026-10-01
+# Date: 2026-10-23 
 # Meta文档：https://github.com/MetaCubeX/mihomo/blob/Meta/docs/config.yaml
 # 参考1：https://github.com/Repcz/Tool/blob/X/mihomo/Client/config.yaml
 # 参考2: https://github.com/Tartarus2014/For-own-use/blob/master/MY/Clash.tpl
@@ -50,7 +50,6 @@ bind-address: '*'
 keep-alive-interval: 15
 keep-alive-idle: 600
 
-
 # 认证信息如有需要，请通过 OpenClash 本地覆写注入，不放 Public GitHub
 
 # 实验性功能
@@ -62,7 +61,6 @@ external-ui-url: https://github.com/Zephyruso/zashboard/releases/latest/download
 external-ui-name: zashboard
 external-ui: ui
 external-controller: 127.0.0.1:9090
-
 
 # 使用geoip.dat数据库
 geodata-mode: true
@@ -85,9 +83,9 @@ tun:
   # stack
   # tun 模式堆栈，如无使用问题，建议使用 mixed栈，默认 gvisor
   # 可用值： system/gvisor/mixed
-  # system 使用系统协议栈，可以提供更稳定/全面的 tun 体验，且占用相对其他堆栈更低
-  # gvisor 通过在用户空间中实现网络协议栈，可以提供更高的安全性和隔离性，同时可以避免操作系统内核和用户空间之间的切换，从而在特定情况下具有更好的网络处理性能
-  # mixed 混合堆栈，tcp 使用 system栈，udp 使用 gvisor栈，使用体验可能相对更好
+  # system 使用系统协议栈，可以提供更稳定/全面的网络处理功能，同时占用相对其他堆栈更低
+  # gvisor 通过在用户空间中实现网络协议栈，可以提供更高的安全性和隔离性，同时可以避免操作系统内核和用户空间之间的切换
+  # mixed 混合堆栈，tcp 使用 system栈，udp 使用 gvisor栈
   stack: mixed
   dns-hijack:
     - "tcp://any:53"
@@ -99,11 +97,8 @@ tun:
 # 嗅探域名
 sniffer:
   enable: true
-  # 对 redir-host 类型识别的流量进行强制嗅探
   force-dns-mapping: true
-  # 对所有未获取到域名的流量进行强制嗅探
   parse-pure-ip: true
-  # 是否使用嗅探结果作为实际访问
   override-destination: true
   sniff:
     HTTP:
@@ -113,35 +108,23 @@ sniffer:
       ports: [443, 8443]
     QUIC:
       ports: [443, 8443]
-  # 需要跳过嗅探的域名, 主要解决部分站点 sni 字段非域名, 导致嗅探结果异常的问题, 如米家设备
   skip-domain:
     - "Mijia Cloud"
     - "+.push.apple.com"
 
-
 # DNS 配置
 dns:
-  # 关闭将使用系统 DNS
   enable: true
-  # 是否开启 DoH 支持 HTTP/3，将并发尝试
   prefer-h3: false
-  # 开启 DNS 服务器监听
   listen: 0.0.0.0:1053
-  # 启用IPv6解析
   ipv6: false
-  # 自适应替换缓存算法
   cache-algorithm: arc
-  # 模式：redir-host或fake-ip
   enhanced-mode: fake-ip
-  # fake-ip 池设置
   fake-ip-range: 198.18.0.1/16
-  # 配置不使用 fake-ip 的域名
   fake-ip-filter:
-    # 本地域名
     - "*.lan"
     - "*.local"
     - "*.localhost"
-    # NTP时间服务器
     - "time.*.com"
     - "ntp.*.com"
     - "pool.ntp.org"
@@ -149,27 +132,18 @@ dns:
     - "time.windows.com"
     - "time.apple.com"
     - "time.google.com"
-    # 中国大陆网站
     - "geosite:cn"
-    # Google Talk服务
     - "mtalk.google.com"
     - "alt[1-8]-mtalk.google.com"
-  # 用于解析 DoH/DoT 域名的基础 DNS
   default-nameserver:
     - 223.5.5.5
     - 119.29.29.29
-
-  # DIRECT 流量使用国内公共 DoH
   direct-nameserver:
     - https://dns.alidns.com/dns-query#DIRECT
     - https://doh.pub/dns-query#DIRECT
-
-  # 代理节点服务器域名解析必须可在节点尚未加载时直接工作
   proxy-server-nameserver:
     - https://dns.alidns.com/dns-query#DIRECT
     - https://doh.pub/dns-query#DIRECT
-
-  # 根据域名分流 DNS。这里全部走 DIRECT，避免启动阶段依赖 sProxy
   nameserver-policy:
     "geosite:cn":
       - https://dns.alidns.com/dns-query#DIRECT
@@ -177,21 +151,18 @@ dns:
     "geosite:geolocation-!cn":
       - https://dns.alidns.com/dns-query#DIRECT
       - https://doh.pub/dns-query#DIRECT
-
-  # 默认兜底同样不依赖任何代理组，保证 proxy-provider 能先正常加载
   nameserver:
     - https://dns.alidns.com/dns-query#DIRECT
     - https://doh.pub/dns-query#DIRECT
 
-
 # 策略组类型模板 - 定义不同的策略组基础配置
-use: &use1 { type: select, include-all: true, exclude-type: direct } #手动选择——展开所有节点
-auto: &auto1 { type: url-test, lazy: true, url: "http://www.gstatic.com/generate_204", interval: 600, tolerance: 30, include-all: true, exclude-type: direct, hidden: true } #自动测速——展开所有节点
+use: &use1 { type: select, include-all: true, exclude-type: direct }
+auto: &auto1 { type: url-test, lazy: true, url: "http://www.gstatic.com/generate_204", interval: 600, tolerance: 30, include-all: true, exclude-type: direct, hidden: true }
 fallback: &fall1 { type: fallback, interval: 600, lazy: true, url: 'http://www.gstatic.com/generate_204' }
-emby-backup: &embybackup { type: fallback, interval: 300, timeout: 5000, lazy: true, url: 'http://www.gstatic.com/generate_204', include-all: true, exclude-type: direct, hidden: true } # Emby备用池：5分钟健康检查，仅首选路径不可用时接管
+emby-backup: &embybackup { type: fallback, interval: 300, timeout: 5000, lazy: true, url: 'http://www.gstatic.com/generate_204', include-all: true, exclude-type: direct, hidden: true }
 smart: &smart1 { type: smart, interval: 600, lazy: true, url: 'http://www.gstatic.com/generate_204', hidden: true, uselightgbm: true }
 
-# 节点筛选正则表达式 - 基于地理位置和关键词过滤
+# 节点筛选正则表达式
 FilterHK: &FilterHK '(🇭🇰|港|HK|(?i)Hong)'
 FilterHKLOW: &FilterHKLOW '(🇭🇰|港|HK|(?i)Hong).*(0\.[0-9]\d{0,3}[\d(x|×)])'
 FilterTW: &FilterTW '(台|TW|(?i)Taiwan)'
@@ -206,15 +177,15 @@ FilterUS: &FilterUS '(🇺🇸|美|US|(?i)States|American)'
 FilterUSLOW: &FilterUSLOW '(🇺🇸|美|US|(?i)States|American).*(0\.[0-9]\d{0,3}[\d(x|×)])'
 FilterOT: &FilterOT '(?xi)^(?! .* (?:🇭🇰|香港|Hong\s*Kong|\bHKG?\b|(?:深|沪|京|广)港|🇯🇵|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b|🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b|🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b|🇰🇷|韩国|首尔|仁川|Korea|South\s*Korea|\b(?:KOR|KR|ICN|SEL)\b|🇺🇸|美国|United\s*States|America|\bUSA?\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b|倍率|剩余|到期|流量|官网|订阅|测试|有效|禁止|邮箱|客服|地址|网站|群组)).+$'
 
-# 策略组代理列表模板 - 预定义的代理节点优先级排序
+# 策略组代理列表模板
 a0: &a0 { type: select, proxies: [ 🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto,DIRECT ] }
 s1: &s1 { type: select, proxies: [ DIRECT,sProxy ] }
 s2: &s2 { type: select, proxies: [ sProxy,DIRECT ] }
-g1: &g1 { type: select, proxies: [ sProxy,🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto ] } #纯代理
-g2: &g2 { type: select, proxies: [ sProxy,DIRECT,🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto ] } #代理优先+手动选择
-g3: &g3 { type: select, proxies: [ DIRECT,sProxy,🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto ] } #直连优先+手动选择
-g4: &g4 { type: select, proxies: [ 🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US ] } #手动优先
-ai1: &ai1 { type: select, proxies: [ 🇺🇸US,🇨🇳TW,🇯🇵JP,🇸🇬SG ] } #AI特定
+g1: &g1 { type: select, proxies: [ sProxy,🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto ] }
+g2: &g2 { type: select, proxies: [ sProxy,DIRECT,🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto ] }
+g3: &g3 { type: select, proxies: [ DIRECT,sProxy,🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto ] }
+g4: &g4 { type: select, proxies: [ 🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US ] }
+ai1: &ai1 { type: select, proxies: [ 🇺🇸US,🇨🇳TW,🇯🇵JP,🇸🇬SG ] }
 
 # ==================== 代理策略组 ====================
 proxy-groups:
@@ -255,30 +226,26 @@ proxy-groups:
 - { name: 🇺🇸US-Auto, tolerance: 50, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/US.png", <<: *auto1, filter: *FilterUS }
 
 # ==================== 规则集 ====================
-c1: &c1 { type: http, behavior: classical, format: yaml, interval: 604800 } #classical分流
-c2: &c2 { type: http, behavior: classical, format: text, interval: 604800 } #classical分流
-d1: &d1 { type: http, behavior: domain, format: yaml, interval: 604800 } #domain
-d2: &d2 { type: http, behavior: domain, format: text, interval: 604800 } #domain
-i1: &i1 { type: http, behavior: ipcidr, format: yaml, interval: 604800 } #ipcidr
-i2: &i2 { type: http, behavior: ipcidr, format: text, interval: 604800 } #ipcidr
+c1: &c1 { type: http, behavior: classical, format: yaml, interval: 604800 }
+c2: &c2 { type: http, behavior: classical, format: text, interval: 604800 }
+d1: &d1 { type: http, behavior: domain, format: yaml, interval: 604800 }
+d2: &d2 { type: http, behavior: domain, format: text, interval: 604800 }
+i1: &i1 { type: http, behavior: ipcidr, format: yaml, interval: 604800 }
+i2: &i2 { type: http, behavior: ipcidr, format: text, interval: 604800 }
 
 rule-providers:
-  # name: # Provider 名称
-  #   type: http # http 或 file
-  #   behavior: classical # 或 ipcidr、domain
-  #   path: # 文件路径
-  #   url: # 只有当类型为 HTTP 时才可用，您不需要在本地空间中创建新文件。
-  #   interval: # 自动更新间隔，仅在类型为 HTTP 时可用
-# 自己的规则
+  # 自己的规则
   own-Direct: { <<: *c1, path: ./RuleSet/own-Direct.yaml, url: https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/own-direct.yaml }
   own-Proxy:  { <<: *c1, path: ./RuleSet/own-Proxy.yaml, url: https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/own-proxy.yaml }
   own-Private-Proxy: { <<: *c1, interval: 1800, path: ./RuleSet/own-Private-Proxy.yaml, url: 'https://api.github.com/repos/Renly-97/proxy-private/contents/own-proxy.yaml?ref=main' }
   own-Private-Direct: { <<: *c1, interval: 1800, path: ./RuleSet/own-Private-Direct.yaml, url: 'https://api.github.com/repos/Renly-97/proxy-private/contents/own-direct.yaml?ref=main' }
-# Emby规则
+  # 新增：GitHub 私有拒绝规则（Token 只在 OpenClash 本地覆写注入）
+  own-Private-Reject: { <<: *c1, interval: 1800, path: ./RuleSet/own-Private-Reject.yaml, url: 'https://api.github.com/repos/Renly-97/proxy-private/contents/own-reject.yaml?ref=main' }
+  # Emby规则
   Emby-Private-Proxy: { <<: *c1, interval: 1800, path: ./RuleSet/Emby-Private-Proxy.yaml, url: 'https://api.github.com/repos/Renly-97/proxy-private/contents/emby-proxy.yaml?ref=main' }
   Emby-Private-Direct: { <<: *c1, interval: 1800, path: ./RuleSet/Emby-Private-Direct.yaml, url: 'https://api.github.com/repos/Renly-97/proxy-private/contents/emby-direct.yaml?ref=main' }
- # Emby-Proxy: { <<: *c1, path: ./RuleSet/Emby-Proxy.yaml, url: 'https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/emby-proxy.yaml' }
- # Emby-Direct: { <<: *c1, path: ./RuleSet/Emby-Direct.yaml, url: 'https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/emby-direct.yaml' }
+ # Emby-Proxy: { <<: *c1, path: ./RuleSet/Emby-Proxy.yaml, url: https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/emby-proxy.yaml }
+ # Emby-Direct: { <<: *c1, path: ./RuleSet/Emby-Direct.yaml, url: https://raw.githubusercontent.com/Renly-97/proxy-config/main/openclash/emby-direct.yaml }
 # Ban
 #  rule_reject: { <<: *c2, path: ./RuleSet/rule_reject.yaml, url: https://ruleset.skk.moe/Clash/non_ip/reject.txt }
 #  ruleset_reject: { <<: *d2, path: ./RuleSet/ruleset_reject.yaml, url: https://ruleset.skk.moe/Clash/domainset/reject.txt }
@@ -337,6 +304,8 @@ rule-providers:
 
 # ==================== 规则路由 ====================
 rules:
+# 私人 REJECT ，优先于 Emby / own / 国内直连规则
+- RULE-SET,own-Private-Reject,REJECT
 # Emby
 - RULE-SET,Emby-Private-Proxy,EmbyProxy
 - RULE-SET,Emby-Private-Direct,DIRECT
