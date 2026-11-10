@@ -206,22 +206,24 @@ FilterKR: &FilterKR '(🇰🇷|韩|韓|KR|(?i)Korea)'
 FilterKRLOW: &FilterKRLOW '(🇰🇷|韩|韓|KR|(?i)Korea).*(0\.[0-9]\d{0,3}[\d(x|×)])'
 FilterUS: &FilterUS '(🇺🇸|美|US|(?i)States|American)'
 FilterUSLOW: &FilterUSLOW '(🇺🇸|美|US|(?i)States|American).*(0\.[0-9]\d{0,3}[\d(x|×)])'
-FilterOT: &FilterOT '(?xi)^(?! .* (?:🇭🇰|香港|Hong\s*Kong|\bHKG?\b|(?:深|沪|京|广)港|🇯🇵|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b|🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b|🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b|🇰🇷|韩国|首尔|仁川|Korea|South\s*Korea|\b(?:KOR|KR|ICN|SEL)\b|🇺🇸|美国|United\s*States|America|\bUSA?\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b|倍率|剩余|到期|流量|官网|订阅|测试|有效|禁止|邮箱|客服|地址|网站|群组)).+$'
+# 冷门节点排除规则：仅排除 HK/TW/JP/SG/US 和订阅说明，韩国等其他地区保留。
+# 按节点名称识别，英文地区代码匹配边界，避免误排 AUS（澳大利亚）/RUS（俄罗斯）。
+ExcludeOT: &ExcludeOT '(?i)(?:🇭🇰|🇹🇼|🇯🇵|🇸🇬|🇺🇸|香港|(?:深|沪|滬|京|广|廣)港|[台臺][湾灣北中南]|高雄|日本|东京|東京|大阪|名古屋|福冈|福岡|新加坡|狮城|獅城|美国|美國|洛杉矶|洛杉磯|硅谷|矽谷|西雅图|西雅圖|芝加哥|达拉斯|達拉斯|凤凰城|鳳凰城|阿什本|纽约|紐約|迈阿密|邁阿密|波士顿|波士頓|休斯顿|休斯頓|亚特兰大|亞特蘭大|拉斯维加斯|拉斯維加斯|圣地亚哥|聖地亞哥|盐湖城|鹽湖城|奥斯汀|奧斯汀|波特兰|波特蘭|丹佛|Hong\s*Kong|Taiwan|Taipei|Japan|Tokyo|Osaka|Singapore|United\s*States|American|(?:^|[^a-z])(?:HKG?|TWN?|JPN?|SGP?|USA?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA|TPE|SIN|LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)(?:[^a-z]|$)|剩余|剩餘|到期|过期|過期|流量|官网|官網|订阅|訂閱|客服|套餐|公告|邀请|邀請|返利|重置|有效期|邮箱|郵箱|工单|工單|(?:^|[^a-z])(?:USED|TOTAL|EXPIRE|EMAIL|Panel|Channel)(?:[^a-z]|$))'
 
 # 策略组代理列表模板 - 预定义的代理节点优先级排序
-a0: &a0 { type: select, proxies: [ 🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto,DIRECT ] }
-s1: &s1 { type: select, proxies: [ DIRECT,sProxy ] }
-s2: &s2 { type: select, proxies: [ sProxy,DIRECT ] }
-g1: &g1 { type: select, proxies: [ sProxy,🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto ] } #纯代理
-g2: &g2 { type: select, proxies: [ sProxy,DIRECT,🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto ] } #代理优先+手动选择
-g3: &g3 { type: select, proxies: [ DIRECT,sProxy,🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto ] } #直连优先+手动选择
-g4: &g4 { type: select, proxies: [ 🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US ] } #手动优先
-ai1: &ai1 { type: select, proxies: [ 🇺🇸US,🇨🇳TW,🇯🇵JP,🇸🇬SG ] } #AI特定
+a0: &a0 { type: select, proxies: [ 🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto,DIRECT,🌐冷门节点 ] }
+s1: &s1 { type: select, proxies: [ DIRECT,sProxy,🌐冷门节点 ] }
+s2: &s2 { type: select, proxies: [ sProxy,DIRECT,🌐冷门节点 ] }
+g1: &g1 { type: select, proxies: [ sProxy,🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto,🌐冷门节点 ] } #纯代理
+g2: &g2 { type: select, proxies: [ sProxy,DIRECT,🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto,🌐冷门节点 ] } #代理优先+手动选择
+g3: &g3 { type: select, proxies: [ DIRECT,sProxy,🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🇭🇰HK-Auto,🇨🇳TW-Auto,🇯🇵JP-Auto,🇸🇬SG-Auto,🇺🇸US-Auto,🌐冷门节点 ] } #直连优先+手动选择
+g4: &g4 { type: select, proxies: [ 🇭🇰HK,🇨🇳TW,🇯🇵JP,🇸🇬SG,🇺🇸US,🌐冷门节点 ] } #手动优先
+ai1: &ai1 { type: select, proxies: [ 🇺🇸US,🇨🇳TW,🇯🇵JP,🇸🇬SG,🌐冷门节点 ] } #AI特定
 
 # ==================== 代理策略组 ====================
 proxy-groups:
 - { name: sProxy, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Proxy.png", <<: *a0 }
-- { name: 阿里国际站, type: select, proxies: [ DIRECT,🇺🇸US,🇭🇰HK,🇸🇬SG,🇯🇵JP,🇨🇳TW ], icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Global.png" }
+- { name: 阿里国际站, type: select, proxies: [ DIRECT,🇺🇸US,🇭🇰HK,🇸🇬SG,🇯🇵JP,🇨🇳TW,🌐冷门节点 ], icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Global.png" }
 - { name: Final, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Final.png", <<: *s1 }
 #多媒体
 - { name: Netflix, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Netflix.png", <<: *g1 }
@@ -239,7 +241,7 @@ proxy-groups:
 - { name: Figma, icon: "https://rawstatic.com/shangrenxi/Rules/master/img/figma.png", <<: *g2 }
 - { name: Paypal, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/PayPal.png", <<: *g4 }
 - { name: EmbyProxy, type: fallback, proxies: [ Emby-Preferred,Emby-Backup ], url: "http://www.gstatic.com/generate_204", interval: 300, timeout: 5000, lazy: true, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Media.png" }
-- { name: Emby-Preferred, type: select, proxies: [ 🇭🇰HK-Auto,🇨🇳TW-Auto,🇸🇬SG-Auto,🇺🇸US-Auto,🇯🇵JP-Auto,🇭🇰HK,🇨🇳TW,🇸🇬SG,🇺🇸US,🇯🇵JP ], icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Proxy.png" }
+- { name: Emby-Preferred, type: select, proxies: [ 🇭🇰HK-Auto,🇨🇳TW-Auto,🇸🇬SG-Auto,🇺🇸US-Auto,🇯🇵JP-Auto,🇭🇰HK,🇨🇳TW,🇸🇬SG,🇺🇸US,🇯🇵JP,🌐冷门节点 ], icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Proxy.png" }
 - { name: Emby-Backup, <<: *embybackup, filter: '(🇭🇰|港|HK|(?i)Hong|台|TW|(?i)Taiwan|🇸🇬|新加坡|狮|獅|SG|(?i)Singapore|🇺🇸|美|US|(?i)States|American)', icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Auto.png" }
 
 # ==================== F1 / F3 同机场同编号节点合并（公司 Clash Verge 内置） ====================
@@ -260,7 +262,8 @@ proxy-groups:
 - { name: 🇸🇬SG, proxies: [ 🇸🇬SG-Auto,新加坡01,新加坡02 ], icon: "https://rawstatic.com/erdongchanyo/icon/main/Policy-Country/SG.png", <<: *use1, filter: *FilterSG, exclude-filter: '^\[(?:F1|F3)\]' }
 # - { name:  proxies: [ 🇰🇷KR-Auto ], icon: "https://rawstatic.com/erdongchanyo/icon/main/Policy-Country/KR.png", <<: *use1, filter: *FilterKR }
 - { name: 🇺🇸US, proxies: [ 🇺🇸US-Auto,美国01,美国02 ], icon: "https://rawstatic.com/erdongchanyo/icon/main/Policy-Country/US.png", <<: *use1, filter: *FilterUS, exclude-filter: '^\[(?:F1|F3)\]' }
-# - { name: 🌏Others, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Global.png", <<: *use1, filter: *FilterOT }
+# 五个常用地区以外的节点统一手动选择；订阅更新后自动收纳，无需逐个新增国家组。
+- { name: 🌐冷门节点, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/Global.png", <<: *use1, exclude-filter: *ExcludeOT }
 #自动测速
 - { name: 🇭🇰HK-Auto, proxies: [ 香港01,香港02 ], tolerance: 20, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/HK.png", <<: *auto1, filter: *FilterHK, exclude-filter: '^\[(?:F1|F3)\]' }
 - { name: 🇨🇳TW-Auto, tolerance: 30, icon: "https://rawstatic.com/Koolson/Qure/master/IconSet/Color/TW.png", <<: *auto1, filter: *FilterTW }
